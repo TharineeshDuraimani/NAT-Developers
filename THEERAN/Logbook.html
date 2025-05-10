@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Theeran Parking</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      body > nav, body > div.flex > aside, body > div.flex > main form > *:not(#billPrintSection),
+      body > #popupOverlay,
+      #hamburgerButton, #closeSideNavButton, #editButton, #printButton, #saveButton, 
+      main form > div:has(#tokenSearchInput) /* Hide token search section */
+       {
+        display: none !important;
+      }
+
+      body > div.flex > main, body > div.flex {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      
+      #billPrintSection, #billPrintSection * {
+        visibility: visible !important;
+        color: black !important; /* Ensure text is black for printing */
+      }
+      #billPrintSection {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important; /* Occupy full width of print area */
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      #billPrintSection > div.bg-gray-100 { /* The direct child containing bill content */
+        box-shadow: none !important;
+        border: 1px solid #999 !important; /* Optional simple border for the bill */
+        padding: 10px !important;
+        margin: 20px auto !important; /* Some margin and centering */
+        max-width: 320px; /* Adjust for typical receipt paper width */
+        background-color: white !important;
+      }
+      #billPrintSection h3 { font-size: 14pt !important; }
+      #billPrintSection p, #billPrintSection div, #billPrintSection span { font-size: 10pt !important; }
+      #billPrintSection .text-xl { font-size: 16pt !important; } /* For "TOKEN" heading */
+      .no-print {
+          display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen">
+<!--navbar-->
+  <nav class="w-full h-20 flex items-center justify-between px-4 sm:px-6 fixed top-0 left-0 right-0 z-50 bg-white shadow-lg">
+    <div class="flex items-center space-x-2">
+      <button id="hamburgerButton" class="md:hidden p-2 -ml-2 text-[#1A2E45]">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+      </button>
+      <img src="NAT logo bg removed.png" alt="Logo" class="h-24 sm:h-32 object-contain" />
+    </div>
+    <div class="absolute left-1/2 transform -translate-x-1/2">
+      <h2 class="text-xl sm:text-2xl lg:text-3xl font-semibold text-[#1A2E45] tracking-wide">Theeran Parking</h2>
+    </div>
+    <div class="flex items-center space-x-2 group relative">
+      <a href="#"><img src="user-circle-svgrepo-com.svg" alt="User" class="w-7 sm:w-8" /></a>
+      <h5 class="hidden sm:block text-sm sm:text-base text-[#1A2E45]">Duraimani S</h5>
+      <svg class="w-5 h-5 cursor-pointer text-[#1A2E45]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" onclick="toggleDropdown()">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+      </svg>
+      <div id="dropdown" class="absolute right-0 mt-20 w-48 bg-white shadow-lg rounded-md border border-gray-200 hidden z-50 overflow-hidden">
+          <ul class="text-sm" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+              <li id="dropdownUserName" class="px-4 py-3 border-b border-gray-100 sm:hidden" role="none">
+                  <span class="block text-sm font-semibold text-gray-800 truncate" role="menuitem">Duraimani S</span>
+              </li>
+              <li role="none">
+                  <button onclick="showLogoutPopup()" class="w-full text-left px-4 py-3 hover:bg-blue-50 text-[#1A2E45] transition-colors duration-150" role="menuitem">
+                      Log Out
+                  </button>
+              </li>
+          </ul>
+      </div>
+    </div>
+  </nav>
+
+<div class="flex pt-20">
+  <aside id="sideNav" class="w-64 fixed top-20 left-0 h-[calc(100vh-5rem)] bg-[#1A2E45] text-white p-4 shadow-md z-40 transform -translate-x-full transition-transform duration-300 ease-in-out 
+                           md:translate-x-0 md:h-[calc(100vh-5rem)] md:z-30 md:p-6">
+    <button id="closeSideNavButton" class="md:hidden absolute top-2 right-2 text-white p-1">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+    <nav class="flex flex-col gap-4 text-sm font-medium mt-0 md:gap-5">
+      <a href="Dashboard.html" class="hover:bg-blue-800 px-3 py-2 md:px-4 rounded-md transition-all">Dashboard</a>
+      <a href="Logbook.html" class="bg-blue-700 px-3 py-2 md:px-4 rounded-md transition-all">Log Book</a>
+      <a href="vehiclesummary.html" class="hover:bg-blue-800 px-3 py-2 md:px-4 rounded-md transition-all">Vehicle Summary</a>
+      <a href="accountsummary.html" class="hover:bg-blue-800 px-3 py-2 md:px-4 rounded-md transition-all">Account Statement</a>
+      <a href="monthlypass.html" class="hover:bg-blue-800 px-3 py-2 md:px-4 rounded-md transition-all">Monthly Pass</a>
+      <a href="#" class="hover:bg-blue-800 px-3 py-2 md:px-4 rounded-md transition-all">Settings</a>
+    </nav>
+  </aside>
+
+  <main class="p-4 sm:p-6 md:p-10 w-full md:ml-64 flex justify-center">
+    <form class="bg-white rounded-xl shadow-xl p-4 sm:p-6 md:p-8 flex flex-col gap-5 sm:gap-6 w-full max-w-xl">
+      <div class="text-center">
+        <h2 class="text-2xl sm:text-3xl font-bold text-[#1A2E45]">Log Book</h2>
+      </div>
+
+      <div>
+        <label class="block text-[#1A2E45] font-medium mb-1">Vehicle Number:</label>
+        <div class="flex flex-col gap-2 sm:flex-row sm:gap-3">
+          <select id="vehicleState" class="bg-gray-100 px-2 py-2 rounded-md w-full sm:w-1/4" required>
+            <option value="TN">TN</option>
+            <option value="KL">KL</option>
+            <option value="KA">KA</option>
+            <option value="AP">AP</option>
+            <option value="TS">TS</option>
+            <option value="PY">PY</option>
+          </select>
+          <input id="vehicleDistrict" type="text" class="bg-gray-100 px-2 py-2 rounded-md w-full sm:w-1/4" maxlength="2" placeholder="39,37..." pattern="\d{1,2}" oninput="this.value = this.value.replace(/\D/g, '')" required>
+          <input id="vehicleSeries" type="text" class="bg-gray-100 px-2 py-2 rounded-md w-full sm:w-1/4" maxlength="2" placeholder="AZ" pattern="[A-Za-z]{1,2}" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z]/g, '')" required>
+          <input id="vehicleDigits" type="text" class="bg-gray-100 px-2 py-2 rounded-md w-full sm:w-1/4" maxlength="4" placeholder="9999" pattern="\d{1,4}" oninput="this.value = this.value.replace(/\D/g, '')" required>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[#1A2E45] font-medium mb-1">Vehicle Type:</label>
+        <select id="vehicleType" class="bg-gray-100 px-4 py-2 rounded-md w-full" required>
+          <option value="">Select Type</option>
+          <option value="Bike">Bike</option>
+          <option value="Scooty">Scooty</option>
+          <option value="Car">Car</option>
+          <option value="EV">EV</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-[#1A2E45] font-medium mb-1">Name:</label>
+        <input id="ownerName" type="text" class="bg-gray-100 px-3 py-2 rounded-md w-full" pattern="[A-Za-z\s]*" title="Only letters and spaces allowed" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')">
+      </div>
+
+      <div>
+        <label class="block text-[#1A2E45] font-medium mb-1">Mobile:</label>
+        <input id="ownerMobile" type="tel" class="bg-gray-100 px-3 py-2 rounded-md w-full" pattern="[0-9]{10}" maxlength="10" title="Enter a 10-digit mobile number" oninput="this.value = this.value.replace(/\D/g, '')">
+      </div>
+      
+      <div class="flex justify-center mt-2">
+        <button id="saveButton" class="bg-blue-700 text-white px-8 py-2.5 rounded-md hover:bg-blue-800 transition-all duration-200 text-base font-medium">Save Entry</button>
+      </div>
+      
+      <div class="flex items-center gap-2 sm:gap-3 bg-gray-100 p-3 sm:p-4 rounded-md shadow-inner mt-4">
+        <label for="tokenSearchInput" class="text-[#1A2E45] font-medium whitespace-nowrap text-sm sm:text-base">Find Token:</label>
+        <input 
+          type="text" 
+          id="tokenSearchInput"
+          class="bg-white px-3 py-2 rounded-md w-full border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+          placeholder="Enter token number to search"
+          oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"
+        >
+        <button id="tokenSearchButton" type="button" class="bg-blue-600 hover:bg-blue-700 p-2 rounded-md text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21.53 20.47l-5.42-5.42A7.93 7.93 0 0018 10a8 8 0 10-8 8 7.93 7.93 0 005.05-1.89l5.42 5.42a.75.75 0 001.06-1.06zM4 10a6 6 0 1112 0 6 6 0 01-12 0z"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div id="billPrintSection" class="w-full p-2 sm:p-4 md:p-6 border-t border-gray-200 mt-6 print-container">
+        <div class="bg-gray-50 rounded-md p-3 sm:p-4 shadow">
+          <h3 class="text-lg font-semibold text-center mb-1 sm:mb-2 text-gray-700">THEERAN</h3>
+          <p class="text-xs sm:text-sm text-center text-gray-500 mb-1">Two Wheeler & Car Parking</p>
+          <p class="text-xs sm:text-sm text-center text-gray-500 mb-2">Karumathampatti</p>
+          <p class="text-[10px] sm:text-xs text-center text-gray-400 mb-2">Mobile: +91 9842210042, 9842234680</p>
+          <div class="bg-white rounded-md p-2 border border-gray-300 my-3">
+            <p class="text-center font-bold text-xl mb-2 text-gray-800">TOKEN</p>
+            <div class="grid grid-cols-2 gap-x-2 gap-y-1 mb-1 text-xs sm:text-sm text-gray-700">
+              <div>Member Name:</div><div class="font-medium text-right"><span id="memberNameDisplay"></span></div>
+              <div>Mobile:</div><div class="font-medium text-right"><span id="mobileDisplay"></span></div>
+            </div>
+            <hr class="my-1">
+            <div class="grid grid-cols-2 gap-x-2 gap-y-1 mb-1 text-xs sm:text-sm text-gray-700">
+              <div>IN:</div><div class="font-medium text-right"><span id="inTimeDisplay"></span></div>
+              <div>OUT:</div><div class="font-medium text-right"><span id="outTimeDisplay">-</span></div>
+            </div>
+             <hr class="my-1">
+            <div class="grid grid-cols-2 gap-x-2 gap-y-1 mb-1 text-xs sm:text-sm text-gray-700">
+              <div>Token No:</div><div class="font-bold text-lg text-right"><span id="tokenNumberDisplay"></span></div>
+              <div>Vehicle No:</div><div class="font-medium text-right"><span id="vehicleNumberDisplay"></span></div>
+            </div>
+            <p class="text-[10px] sm:text-xs text-center italic text-gray-400 mt-2">Thank you! Visit again.</p>
+          </div>
+          <p class="text-[10px] sm:text-xs text-center italic text-gray-400 mt-2">Powered by NAT Technologies.</p>
+          <p class="text-[10px] sm:text-xs text-center italic text-gray-400 mt-2">Mobile:7397514680</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-6 mt-4">
+        <button id="editButton" class="bg-yellow-500 text-white px-6 py-2 rounded-md hover:bg-yellow-600 transition-all duration-200 w-full sm:w-auto">Edit</button>
+        <button id="printButton" class="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-all duration-200 w-full sm:w-auto">Print Bill</button>
+      </div>
+
+    </form>
+  </main>
+</div>
+<div id="popupOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-60 flex items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-md text-center">
+    <h3 class="text-lg sm:text-xl font-semibold text-gray-700 mb-4">Confirm Logout</h3>
+    <p class="text-gray-600 mb-6">Are you sure you want to log out?</p>
+    <div class="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+      <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full sm:w-auto">Confirm</button>
+      <button onclick="closePopup()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 w-full sm:w-auto">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Navigation & Popup Scripts (from previous steps)
+  function toggleDropdown() { document.getElementById("dropdown").classList.toggle("hidden"); }
+  function showLogoutPopup() { document.getElementById("popupOverlay").classList.remove("hidden"); document.body.classList.add("overflow-hidden"); }
+  function closePopup() { document.getElementById("popupOverlay").classList.add("hidden"); document.body.classList.remove("overflow-hidden"); }
+  function logout() { window.location.href = "theeranlogin.html"; }
+
+  document.addEventListener("click", function(event) {
+    const dropdown = document.getElementById("dropdown");
+    const dropdownButtonContainer = document.querySelector(".group.relative");
+    if (dropdownButtonContainer && !dropdownButtonContainer.contains(event.target) && !dropdown.classList.contains("hidden")) {
+      dropdown.classList.add("hidden");
+    }
+  });
+
+  const hamburgerButton = document.getElementById('hamburgerButton');
+  const closeSideNavButton = document.getElementById('closeSideNavButton');
+  const sideNav = document.getElementById('sideNav');
+  if (hamburgerButton && sideNav && closeSideNavButton) {
+    hamburgerButton.addEventListener('click', (e) => { e.stopPropagation(); sideNav.classList.remove('-translate-x-full'); sideNav.classList.add('translate-x-0'); document.body.classList.add("overflow-hidden"); });
+    closeSideNavButton.addEventListener('click', () => { sideNav.classList.remove('translate-x-0'); sideNav.classList.add('-translate-x-full'); document.body.classList.remove("overflow-hidden"); });
+    document.addEventListener('click', function(event) {
+      if (window.innerWidth < 768 && sideNav.classList.contains('translate-x-0') && !sideNav.contains(event.target) && !hamburgerButton.contains(event.target)) {
+        sideNav.classList.remove('translate-x-0'); sideNav.classList.add('-translate-x-full'); document.body.classList.remove("overflow-hidden");
+      }
+    });
+  }
+
+  // Logbook Form Functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const vehicleState = document.getElementById('vehicleState');
+    const vehicleDistrict = document.getElementById('vehicleDistrict');
+    const vehicleSeries = document.getElementById('vehicleSeries');
+    const vehicleDigits = document.getElementById('vehicleDigits');
+    const vehicleType = document.getElementById('vehicleType');
+    const ownerNameInput = document.getElementById('ownerName');
+    const ownerMobileInput = document.getElementById('ownerMobile');
+    const tokenSearchInput = document.getElementById('tokenSearchInput');
+    // const tokenSearchButton = document.getElementById('tokenSearchButton'); // For future use
+
+    const saveButton = document.getElementById('saveButton');
+    const editButton = document.getElementById('editButton');
+    const printButton = document.getElementById('printButton');
+
+    const memberNameDisplay = document.getElementById('memberNameDisplay');
+    const mobileDisplay = document.getElementById('mobileDisplay');
+    const inTimeDisplay = document.getElementById('inTimeDisplay');
+    const tokenNumberDisplay = document.getElementById('tokenNumberDisplay');
+    const vehicleNumberDisplay = document.getElementById('vehicleNumberDisplay');
+    const outTimeDisplay = document.getElementById('outTimeDisplay');
+
+    const formInputs = [
+        vehicleState, vehicleDistrict, vehicleSeries, vehicleDigits,
+        vehicleType, ownerNameInput, ownerMobileInput, tokenSearchInput
+    ];
+
+    function updateFormInteractivity(isSaved) {
+        formInputs.forEach(input => input.disabled = isSaved);
+        saveButton.disabled = isSaved;
+        editButton.disabled = !isSaved;
+        printButton.disabled = !isSaved;
+    }
+
+    function clearBillPreview() {
+        memberNameDisplay.textContent = '-';
+        mobileDisplay.textContent = '-';
+        inTimeDisplay.textContent = '-';
+        tokenNumberDisplay.textContent = '-';
+        vehicleNumberDisplay.textContent = '-';
+        outTimeDisplay.textContent = '-';
+    }
+    
+    function generateTokenNumber() {
+        return `T${String(Date.now()).slice(-4)}${Math.floor(Math.random() * 90) + 10}`;
+    }
+
+    saveButton.addEventListener('click', (event) => {
+        event.preventDefault(); 
+
+        const vStateVal = vehicleState.value;
+        const vDistrictVal = vehicleDistrict.value;
+        const vSeriesVal = vehicleSeries.value; // Already uppercase from oninput
+        const vDigitsVal = vehicleDigits.value;
+        const vTypeVal = vehicleType.value;
+        const ownerVal = ownerNameInput.value.trim();
+        const mobileVal = ownerMobileInput.value.trim();
+
+        if (!vStateVal || !vDistrictVal || !vSeriesVal || !vDigitsVal || !vTypeVal) {
+            alert('Please fill in all Vehicle Number parts and Vehicle Type.');
+            if(!vStateVal) vehicleState.focus();
+            else if(!vDistrictVal) vehicleDistrict.focus();
+            else if(!vSeriesVal) vehicleSeries.focus();
+            else if(!vDigitsVal) vehicleDigits.focus();
+            else if(!vTypeVal) vehicleType.focus();
+            return;
+        }
+        // Pattern attribute handles format, but JS check for length is good
+        if (vSeriesVal.length < 1 || vSeriesVal.length > 2) {
+             alert('Vehicle Series should be 1 or 2 letters (e.g., AB).');
+             vehicleSeries.focus();
+             return;
+        }
+        if (vDigitsVal.length < 1 || vDigitsVal.length > 4) {
+            alert('Vehicle Digits should be 1 to 4 numbers (e.g., 1234).');
+            vehicleDigits.focus();
+            return;
+        }
+        if (mobileVal && !/^\d{10}$/.test(mobileVal)) {
+            alert('Please enter a valid 10-digit mobile number or leave it empty.');
+            ownerMobileInput.focus();
+            return;
+        }
+
+        const fullVehicleNumber = `${vStateVal}-${vDistrictVal} ${vSeriesVal} ${vDigitsVal}`.trim();
+        const tokenNo = generateTokenNumber();
+        const inTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+        vehicleNumberDisplay.textContent = fullVehicleNumber;
+        memberNameDisplay.textContent = ownerVal || '-';
+        mobileDisplay.textContent = mobileVal || '-';
+        tokenNumberDisplay.textContent = tokenNo;
+        inTimeDisplay.textContent = inTime;
+        outTimeDisplay.textContent = '-';
+
+        updateFormInteractivity(true);
+    });
+
+    editButton.addEventListener('click', () => {
+        updateFormInteractivity(false);
+        vehicleState.focus();
+    });
+
+    printButton.addEventListener('click', () => {
+        if (!tokenNumberDisplay.textContent || tokenNumberDisplay.textContent === '-') {
+            alert("No bill generated to print. Please save an entry first.");
+            return;
+        }
+        window.print();
+    });
+
+    // Initial state setup
+    formInputs.forEach(input => input.disabled = false);
+    saveButton.disabled = false;
+    editButton.disabled = true;
+    printButton.disabled = true;
+    clearBillPreview();
+    if(vehicleState) vehicleState.focus(); // Focus on the first field if it exists
+  });
+</script>
+
+</body>
+</html>
